@@ -40,7 +40,13 @@ function renderTasks() {
   tasks.forEach((t) => {
     const card = document.createElement("div");
     card.className = "task-card";
-    card.innerHTML = `<h3>${escapeHtml(t.title)}</h3><p>${escapeHtml(t.description)}</p>`;
+    card.innerHTML = `
+      <div class="task-card-content">
+        <h3>${escapeHtml(t.title)}</h3>
+        <p>${escapeHtml(t.description)}</p>
+      </div>
+      <button class="btn-delete" data-id="${t.id}">Удалить</button>
+    `;
     taskListEl.appendChild(card);
   });
 }
@@ -101,6 +107,12 @@ function createTask(title, description) {
   };
 }
 
+function deleteTask(id) {
+  tasks = tasks.filter((t) => t.id !== id);
+  saveTasks();
+  renderTasks();
+}
+
 btnCreate.addEventListener("click", showForm);
 
 btnFormCancel.addEventListener("click", hideForm);
@@ -115,6 +127,11 @@ btnForm.addEventListener("submit", (e) => {
   saveTasks();
   hideForm();
   renderTasks();
+});
+
+taskListEl.addEventListener("click", (e) => {
+  const btn = e.target.closest(".btn-delete");
+  if (btn) deleteTask(btn.dataset.id);
 });
 
 loadTasks();
