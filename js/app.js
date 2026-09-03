@@ -13,7 +13,6 @@ const errorDesc = document.getElementById("errorDesc");
 const taskListEl = document.getElementById("taskList");
 const taskCountEl = document.getElementById("taskCount");
 const editTaskIdInput = document.getElementById("editTaskId");
-const btnSave = document.getElementById("btnSave");
 
 function loadTasks() {
   try {
@@ -40,21 +39,27 @@ function renderTasks() {
   taskCountEl.textContent = `Список из ${tasks.length} задач`;
 
   tasks.forEach((t) => {
-    const card = document.createElement("div");
-    card.className = "task-card";
     const date = formatDate(t.created_at);
-    card.innerHTML = `
-      <div class="task-card-content">
-        <h3>${escapeHtml(t.title)}</h3>
-        <p>${escapeHtml(t.description)}</p>
-        <div class="task-card-date">${date}</div>
-      </div>
-      <div class="task-card-actions">
-        <button class="btn-edit" data-id="${t.id}">Редактировать</button>
-        <button class="btn-delete" data-id="${t.id}">Удалить</button>
+    const col = document.createElement("div");
+    col.className = "col-12";
+    col.innerHTML = `
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start gap-3">
+            <div>
+              <h3 class="card-title h6 mb-1">${escapeHtml(t.title)}</h3>
+              <p class="card-text mb-1">${escapeHtml(t.description)}</p>
+              <p class="card-text text-muted small mb-0">${date}</p>
+            </div>
+            <div class="d-flex flex-column flex-sm-row gap-2 flex-shrink-0">
+              <button class="btn btn-sm btn-outline-secondary btn-edit" data-id="${t.id}">Редактировать</button>
+              <button class="btn btn-sm btn-outline-danger btn-delete" data-id="${t.id}">Удалить</button>
+            </div>
+          </div>
+        </div>
       </div>
     `;
-    taskListEl.appendChild(card);
+    taskListEl.appendChild(col);
   });
 }
 
@@ -71,7 +76,7 @@ function formatDate(iso) {
 }
 
 function showForm(task) {
-  formWrapper.classList.add("open");
+  formWrapper.classList.remove("d-none");
   clearErrors();
   editTaskIdInput.value = task ? task.id : "";
   inputTitle.value = task ? task.title : "";
@@ -80,33 +85,39 @@ function showForm(task) {
 }
 
 function hideForm() {
-  formWrapper.classList.remove("open");
+  formWrapper.classList.add("d-none");
   clearErrors();
 }
 
 function clearErrors() {
   errorTitle.textContent = "";
   errorDesc.textContent = "";
+  inputTitle.classList.remove("is-invalid");
+  inputDesc.classList.remove("is-invalid");
 }
 
 function validate() {
   let valid = true;
 
+  inputTitle.classList.remove("is-invalid");
+  inputDesc.classList.remove("is-invalid");
+  errorTitle.textContent = "";
+  errorDesc.textContent = "";
+
   if (!inputTitle.value.trim()) {
     errorTitle.textContent = "Заголовок обязателен для заполнения";
+    inputTitle.classList.add("is-invalid");
     valid = false;
   } else if (inputTitle.value.length > 255) {
     errorTitle.textContent = "Заголовок не должен превышать 255 символов";
+    inputTitle.classList.add("is-invalid");
     valid = false;
-  } else {
-    errorTitle.textContent = "";
   }
 
   if (inputDesc.value.length > 2000) {
     errorDesc.textContent = "Описание не должно превышать 2000 символов";
+    inputDesc.classList.add("is-invalid");
     valid = false;
-  } else {
-    errorDesc.textContent = "";
   }
 
   return valid;
