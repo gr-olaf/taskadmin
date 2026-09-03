@@ -12,6 +12,8 @@ const errorTitle = document.getElementById("errorTitle");
 const errorDesc = document.getElementById("errorDesc");
 const taskListEl = document.getElementById("taskList");
 const taskCountEl = document.getElementById("taskCount");
+const editTaskIdInput = document.getElementById("editTaskId");
+const btnSave = document.getElementById("btnSave");
 
 function loadTasks() {
   try {
@@ -40,12 +42,17 @@ function renderTasks() {
   tasks.forEach((t) => {
     const card = document.createElement("div");
     card.className = "task-card";
+    const date = formatDate(t.created_at);
     card.innerHTML = `
       <div class="task-card-content">
         <h3>${escapeHtml(t.title)}</h3>
         <p>${escapeHtml(t.description)}</p>
+        <div class="task-card-date">${date}</div>
       </div>
-      <button class="btn-delete" data-id="${t.id}">Удалить</button>
+      <div class="task-card-actions">
+        <button class="btn-edit" data-id="${t.id}">Редактировать</button>
+        <button class="btn-delete" data-id="${t.id}">Удалить</button>
+      </div>
     `;
     taskListEl.appendChild(card);
   });
@@ -57,11 +64,18 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-function showForm() {
+function formatDate(iso) {
+  const d = new Date(iso);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function showForm(task) {
   formWrapper.classList.add("open");
-  inputTitle.value = "";
-  inputDesc.value = "";
   clearErrors();
+  editTaskIdInput.value = task ? task.id : "";
+  inputTitle.value = task ? task.title : "";
+  inputDesc.value = task ? task.description : "";
   inputTitle.focus();
 }
 
@@ -113,7 +127,21 @@ function deleteTask(id) {
   renderTasks();
 }
 
-btnCreate.addEventListener("click", showForm);
+function editTask(id) {
+  const task = tasks.find((t) => t.id === id);
+  if (task) showForm(task);
+}
+
+function updateTask(id, title, description) {
+  const task = tasks.find((t) => t.id === id);
+  if (task) {
+    task.title = title;
+    task.description = description;
+    saveTasks();
+  }
+}
+
+btnCreate.addEventListener("click", () => showForm());
 
 btnFormCancel.addEventListener("click", hideForm);
 
@@ -122,16 +150,30 @@ btnForm.addEventListener("submit", (e) => {
 
   if (!validate()) return;
 
-  const task = createTask(inputTitle.value.trim(), inputDesc.value.trim());
-  tasks.push(task);
-  saveTasks();
+  const id = editTaskIdInput.value;
+  const title = inputTitle.value.trim();
+  const description = inputDesc.value.trim();
+
+  if (id) {
+    updateTask(id, title, description);
+  } else {
+    const task = createTask(title, description);
+    tasks.push(task);
+    saveTasks();
+  }
+
   hideForm();
   renderTasks();
 });
 
 taskListEl.addEventListener("click", (e) => {
-  const btn = e.target.closest(".btn-delete");
-  if (btn) deleteTask(btn.dataset.id);
+  const editBtn = e.target.closest(".btn-edit");
+  if (editBtn) {
+    editTask(editBtn.dataset.id);
+    return;
+  }
+  const deleteBtn = e.target.closest(".btn-delete");
+  if (deleteBtn) deleteTask(deleteBtn.dataset.id);
 });
 
 loadTasks();

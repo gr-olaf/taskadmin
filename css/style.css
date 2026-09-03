@@ -161,6 +161,18 @@ body {
   min-width: 0;
 }
 
+.task-card-date {
+  font-size: 0.75rem;
+  color: #999;
+  margin-top: 0.4rem;
+}
+
+.task-card-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
 .btn-delete {
   background: none;
   border: none;
@@ -171,11 +183,26 @@ body {
   border-radius: 6px;
   transition: background 0.2s;
   white-space: nowrap;
-  flex-shrink: 0;
 }
 
 .btn-delete:hover {
   background: #fee2e2;
+}
+
+.btn-edit {
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.btn-edit:hover {
+  background: #eff6ff;
 }
 
 .empty-state {
