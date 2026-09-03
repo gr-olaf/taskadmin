@@ -42,11 +42,13 @@ function renderTasks() {
     const date = formatDate(t.created_at);
     const col = document.createElement("div");
     col.className = "col-12";
+    col.draggable = true;
+    col.dataset.id = t.id;
     col.innerHTML = `
-      <div class="card shadow-sm h-100">
+      <div class="card shadow-sm h-100 task-card">
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-start gap-3">
-            <div>
+            <div class="task-card-content">
               <h3 class="card-title h6 mb-1">${escapeHtml(t.title)}</h3>
               <p class="card-text mb-1">${escapeHtml(t.description)}</p>
               <p class="card-text text-muted small mb-0">${date}</p>
@@ -59,8 +61,58 @@ function renderTasks() {
         </div>
       </div>
     `;
+    col.addEventListener("dragstart", handleDragStart);
+    col.addEventListener("dragover", handleDragOver);
+    col.addEventListener("dragleave", handleDragLeave);
+    col.addEventListener("drop", handleDrop);
+    col.addEventListener("dragend", handleDragEnd);
     taskListEl.appendChild(col);
   });
+}
+
+let dragItem = null;
+
+function handleDragStart(e) {
+  dragItem = this;
+  this.classList.add("dragging");
+  e.dataTransfer.effectAllowed = "move";
+  e.dataTransfer.setData("text/plain", this.dataset.id);
+}
+
+function handleDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = "move";
+  this.classList.add("drag-over");
+}
+
+function handleDragLeave() {
+  this.classList.remove("drag-over");
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  this.classList.remove("drag-over");
+  if (dragItem === this) return;
+  const list = [...taskListEl.children];
+  const fromIndex = list.indexOf(dragItem);
+  const toIndex = list.indexOf(this);
+  reorderTasks(fromIndex, toIndex);
+}
+
+function handleDragEnd() {
+  this.classList.remove("dragging");
+  dragItem = null;
+  document.querySelectorAll(".drag-over, .dragging").forEach((el) => {
+    el.classList.remove("drag-over", "dragging");
+  });
+}
+
+function reorderTasks(fromIndex, toIndex) {
+  if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) return;
+  const [moved] = tasks.splice(fromIndex, 1);
+  tasks.splice(toIndex, 0, moved);
+  saveTasks();
+  renderTasks();
 }
 
 function escapeHtml(str) {

@@ -14,3 +14,21 @@ body {
   padding: 3rem 1rem;
   color: #999;
 }
+
+.task-card {
+  cursor: grab;
+}
+
+.task-card:active {
+  cursor: grabbing;
+}
+
+.dragging {
+  opacity: 0.4;
+  transform: scale(0.98);
+}
+
+.drag-over > .card {
+  border: 2px dashed #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+}
