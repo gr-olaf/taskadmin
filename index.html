@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskAdmin — Управление задачами</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>Управление задачами</h1>
+      <p class="task-count" id="taskCount"></p>
+      <button class="btn btn-primary" id="btnCreate">Создать задачу</button>
+    </header>
+
+    <div class="form-wrapper" id="formWrapper">
+      <form id="taskForm" class="task-form">
+        <div class="form-group">
+          <label for="taskTitle">Заголовок задачи *</label>
+          <input type="text" id="taskTitle" maxlength="255" required>
+          <span class="error" id="errorTitle"></span>
+        </div>
+        <div class="form-group">
+          <label for="taskDesc">Описание задачи</label>
+          <textarea id="taskDesc" maxlength="2000" rows="4"></textarea>
+          <span class="error" id="errorDesc"></span>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Сохранить</button>
+          <button type="button" class="btn btn-secondary" id="btnCancel">Отмена</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="taskList" class="task-list"></div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
