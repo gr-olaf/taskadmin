@@ -117,10 +117,12 @@ npm run test:ui          # Playwright UI mode
 - System Chromium installed via: `apk add --no-cache chromium`
 
 ### CI/CD (GitHub Actions)
-- **Workflow:** `.github/workflows/e2e.yml`
-- **Triggers:** push/PR to `main`/`master`
+- **Workflow:** `.github/workflows/deploy.yml`
+- **Triggers:** push to `main` and manual `workflow_dispatch`
 - **Runner:** `ubuntu-latest`
-- **Steps:** checkout → setup Node 20 → `npm ci` → install Playwright Chromium → run tests
+- **Jobs:**
+  - `test`: checkout → setup Node 20 → `npm ci` → install Playwright Chromium → run tests (`npm test`)
+  - `deploy`: runs after `test` passes → deploy static site to GitHub Pages
 - **Artifacts:** `playwright-report` uploaded on failure (retained 14 days)
 
 ### Test Pattern (beforeEach)

@@ -299,10 +299,12 @@ npm run test:ui          # визуальный UI Playwright
 
 #### CI/CD (GitHub Actions)
 
-- **Workflow:** `.github/workflows/e2e.yml`
-- **Триггеры:** push/PR на ветки `main`/`master`
+- **Workflow:** `.github/workflows/deploy.yml`
+- **Триггеры:** push на ветку `main` и ручной запуск (`workflow_dispatch`)
 - **Среда:** `ubuntu-latest`, Node.js 20
-- **Шаги:** checkout → установка зависимостей → установка Playwright Chromium → запуск тестов
+- **Шаги:**
+  - Job `test`: checkout → установка зависимостей → установка Playwright Chromium → запуск тестов (`npm test`)
+  - Job `deploy`: выполняется после успешного `test` → деплой статики на GitHub Pages
 - **Артефакты:** отчёт Playwright загружается при ошибках (хранится 14 дней)
 
 ---
