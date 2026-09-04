@@ -24,6 +24,20 @@
 - gcc / g++ / make / cmake
 - docker / podman
 
+## Figma API Integration
+
+- **Token location:** `.env` file (not committed to git)
+- **Files:**
+  - `js/figma.js` — API client with functions: getFile, getFileNodes, getImages, getFileComponents, getFileStyles, getComments, getMe
+  - `js/figma-example.js` — usage example
+  - `js/figma-inspect.js` — inspect specific Figma design
+- **Dependencies:** dotenv, axios (installed in node_modules)
+- **Commands:**
+  ```sh
+  npm run figma:example    # run Figma API example
+  node js/figma-inspect.js # inspect Figma design
+  ```
+
 ## Setup Commands
 
 ### Install essential tools
@@ -57,6 +71,9 @@ apk add --no-cache git curl openssh build-base nodejs npm python3 py3-pip
 - **Language:** Russian (interface text)
 - **Adaptive:** Bootstrap grid for responsive layout (desktop, tablet, mobile)
 - **Build:** No build tools required; no npm/yarn needed for the app itself
+- **Figma Integration:** API for design system extraction (dotenv + axios)
+  - Token: stored in `.env` as `FIGMA_TOKEN`
+  - Files: `js/figma.js`, `js/figma-example.js`, `js/figma-inspect.js`
 
 ## Local Dev Server (darkhttpd)
 
