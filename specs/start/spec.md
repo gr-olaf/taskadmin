@@ -115,7 +115,7 @@
 └── .env.production     # Конфигурация для продакшена (Render.com), не коммитится в git
 ```
 
-**Выбор окружения:** `server/app.js` и `server/db.js` загружают `.env` по умолчанию (локально, без SSL) и `.env.production` при `NODE_ENV=production` (продакшен, с SSL `{ rejectUnauthorized: false }`).
+**Выбор окружения:** `server/app.js` и `server/db.js` загружают `.env` по умолчанию (локально, без SSL) и `.env.production` при `NODE_ENV=production` (продакшен, с SSL `{ rejectUnauthorized: false }`). Подключение к БД приоритетно берётся из `DATABASE_URL` (автоматически подставляется Render для управляемого Postgres), иначе из `PGHOST`/`PGPORT`/`PGUSER`/`PGPASSWORD`/`PGDATABASE`.
 
 ### 4.2. API-эндпоинты
 

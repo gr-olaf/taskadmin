@@ -71,7 +71,12 @@ PGPASSWORD=root psql -h my-postgres -U postgres -d taskadmin
 
 ### Production (Render.com)
 
-**Config file:** `.env.production` (not committed to git, see `.gitignore`)
+**Config file:** `.env.production` (not committed to git, see `.gitignore`). On Render the DB config is normally provided via environment variables instead.
+
+**Precedence in `server/db.js`:**
+1. `DATABASE_URL` (connection string) — auto‑provided by Render for its managed Postgres
+2. Individual `PGHOST` / `PGPORT` / `PGUSER` / `PGPASSWORD` / `PGDATABASE` vars
+3. Local fallback defaults (`my-postgres` / `postgres` / `root` / `taskadmin`) — only for local dev
 
 | Parameter | Value |
 |-----------|-------|
@@ -80,6 +85,16 @@ PGPASSWORD=root psql -h my-postgres -U postgres -d taskadmin
 | User | `taskadminuser` |
 | Database | `taskadmindb_rbw2` |
 | SSL | `{ rejectUnauthorized: false }` (required by Render) |
+
+**Env vars to set in Render dashboard** (as an alternative to `DATABASE_URL`):
+```sh
+NODE_ENV=production
+PGHOST=dpg-daf9q5v40ujc73aaoh2g-a.frankfurt-postgres.render.com
+PGPORT=5432
+PGUSER=taskadminuser
+PGPASSWORD=<secret>
+PGDATABASE=taskadmindb_rbw2
+```
 
 **Quick connect (shell):**
 ```sh

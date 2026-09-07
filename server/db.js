@@ -2,15 +2,28 @@ const envFile = process.env.NODE_ENV === "production" ? ".env.production" : ".en
 require("dotenv").config({ path: envFile });
 
 const { Pool } = require("pg");
+const { parse: parseConnectionString } = require("pg-connection-string");
 
-const pool = new Pool({
-  host: process.env.PGHOST || "my-postgres",
-  port: Number(process.env.PGPORT) || 5432,
-  user: process.env.PGUSER || "postgres",
-  password: process.env.PGPASSWORD || "root",
-  database: process.env.PGDATABASE || "taskadmin",
-  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
-});
+const prod = process.env.NODE_ENV === "production";
+const ssl = prod ? { rejectUnauthorized: false } : false;
+
+let pool;
+if (process.env.DATABASE_URL) {
+  const parsed = parseConnectionString(process.env.DATABASE_URL);
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: parsed.ssl ? { rejectUnauthorized: false } : ssl,
+  });
+} else {
+  pool = new Pool({
+    host: process.env.PGHOST || "my-postgres",
+    port: Number(process.env.PGPORT) || 5432,
+    user: process.env.PGUSER || "postgres",
+    password: process.env.PGPASSWORD || "root",
+    database: process.env.PGDATABASE || "taskadmin",
+    ssl,
+  });
+}
 
 async function initDb() {
   await pool.query(`
