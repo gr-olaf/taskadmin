@@ -1,9 +1,9 @@
 const { test, expect } = require("@playwright/test");
-const { clearTasks, openApp } = require("./helpers");
 
-test.beforeEach(async ({ page, request }) => {
-  await clearTasks(request);
-  await openApp(page);
+test.beforeEach(async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
 });
 
 test.describe("Создание задачи", () => {

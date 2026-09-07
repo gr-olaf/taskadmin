@@ -1,9 +1,9 @@
 const { test, expect } = require("@playwright/test");
-const { clearTasks, openApp } = require("./helpers");
 
-test.beforeEach(async ({ page, request }) => {
-  await clearTasks(request);
-  await openApp(page);
+test.beforeEach(async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
   await page.evaluate(() => document.getElementById("taskTitle").removeAttribute("required"));
   await page.click("#btnCreate");
 });

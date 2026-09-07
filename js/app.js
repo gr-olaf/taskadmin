@@ -1,4 +1,4 @@
-const API_URL = "/api/tasks";
+const STORAGE_KEY = "taskadmin_tasks";
 
 let tasks = [];
 
@@ -14,10 +14,17 @@ const taskListEl = document.getElementById("taskList");
 const taskCountEl = document.getElementById("taskCount");
 const editTaskIdInput = document.getElementById("editTaskId");
 
-async function loadTasks() {
-  const res = await fetch(API_URL);
-  if (!res.ok) throw new Error("Не удалось загрузить задачи");
-  tasks = await res.json();
+function loadTasks() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    tasks = raw ? JSON.parse(raw) : [];
+  } catch {
+    tasks = [];
+  }
+}
+
+function saveTasks() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
 }
 
 function renderTasks() {
@@ -100,18 +107,12 @@ function handleDragEnd() {
   });
 }
 
-async function reorderTasks(fromIndex, toIndex) {
+function reorderTasks(fromIndex, toIndex) {
   if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) return;
   const [moved] = tasks.splice(fromIndex, 1);
   tasks.splice(toIndex, 0, moved);
+  saveTasks();
   renderTasks();
-
-  const res = await fetch(`${API_URL}/reorder`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ids: tasks.map((t) => t.id) }),
-  });
-  if (!res.ok) throw new Error("Не удалось сохранить порядок задач");
 }
 
 function escapeHtml(str) {
@@ -174,30 +175,18 @@ function validate() {
   return valid;
 }
 
-function showError(message) {
-  const alert = document.createElement("div");
-  alert.className = "alert alert-danger";
-  alert.setAttribute("role", "alert");
-  alert.textContent = message;
-  document.querySelector(".alert")?.remove();
-  taskListEl.prepend(alert);
+function createTask(title, description) {
+  return {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    title,
+    description,
+    created_at: new Date().toISOString(),
+  };
 }
 
-async function createTask(title, description) {
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ title, description }),
-  });
-  if (!res.ok) throw new Error("Не удалось создать задачу");
-  const task = await res.json();
-  tasks.push(task);
-}
-
-async function deleteTask(id) {
-  const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
-  if (!res.ok && res.status !== 404) throw new Error("Не удалось удалить задачу");
+function deleteTask(id) {
   tasks = tasks.filter((t) => t.id !== id);
+  saveTasks();
   renderTasks();
 }
 
@@ -206,23 +195,20 @@ function editTask(id) {
   if (task) showForm(task);
 }
 
-async function updateTask(id, title, description) {
-  const res = await fetch(`${API_URL}/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ title, description }),
-  });
-  if (!res.ok) throw new Error("Не удалось обновить задачу");
-  const task = await res.json();
-  const idx = tasks.findIndex((t) => t.id === id);
-  if (idx !== -1) tasks[idx] = task;
+function updateTask(id, title, description) {
+  const task = tasks.find((t) => t.id === id);
+  if (task) {
+    task.title = title;
+    task.description = description;
+    saveTasks();
+  }
 }
 
 btnCreate.addEventListener("click", () => showForm());
 
 btnFormCancel.addEventListener("click", hideForm);
 
-btnForm.addEventListener("submit", async (e) => {
+btnForm.addEventListener("submit", (e) => {
   e.preventDefault();
 
   if (!validate()) return;
@@ -231,40 +217,27 @@ btnForm.addEventListener("submit", async (e) => {
   const title = inputTitle.value.trim();
   const description = inputDesc.value.trim();
 
-  try {
-    if (id) {
-      await updateTask(id, title, description);
-    } else {
-      await createTask(title, description);
-    }
-    hideForm();
-    renderTasks();
-  } catch {
-    showError("Не удалось сохранить задачу. Проверьте соединение с сервером.");
+  if (id) {
+    updateTask(id, title, description);
+  } else {
+    const task = createTask(title, description);
+    tasks.push(task);
+    saveTasks();
   }
+
+  hideForm();
+  renderTasks();
 });
 
-taskListEl.addEventListener("click", async (e) => {
+taskListEl.addEventListener("click", (e) => {
   const editBtn = e.target.closest(".btn-edit");
   if (editBtn) {
     editTask(editBtn.dataset.id);
     return;
   }
   const deleteBtn = e.target.closest(".btn-delete");
-  if (deleteBtn) {
-    try {
-      await deleteTask(deleteBtn.dataset.id);
-    } catch {
-      showError("Не удалось удалить задачу. Проверьте соединение с сервером.");
-    }
-  }
+  if (deleteBtn) deleteTask(deleteBtn.dataset.id);
 });
 
-(async () => {
-  try {
-    await loadTasks();
-  } catch {
-    showError("Не удалось загрузить задачи. Убедитесь, что сервер запущен.");
-  }
-  renderTasks();
-})();
+loadTasks();
+renderTasks();

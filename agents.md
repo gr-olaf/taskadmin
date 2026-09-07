@@ -17,11 +17,9 @@
 | node | /usr/bin/node |
 | npm | /usr/bin/npm |
 | chromium-browser | /usr/bin/chromium-browser |
-| git | /usr/bin/git |
-| psql | /usr/bin/psql |
 
 ### Missing (not installed)
-- curl, ssh
+- git, curl, ssh
 - python3 / pip
 - gcc / g++ / make / cmake
 - docker / podman
@@ -39,74 +37,6 @@
   npm run figma:example    # run Figma API example
   node js/figma-inspect.js # inspect Figma design
   ```
-
-## PostgreSQL Connection
-
-The app supports two environments: local development and production, switched via `NODE_ENV`.
-
-| Mode | Env file | Host | SSL |
-|------|----------|------|-----|
-| Local (`npm start` / `npm run dev`) | `.env` | `my-postgres` (container) | off |
-| Production (`npm run start:prod` / `NODE_ENV=production`) | `.env.production` | Render.com | on |
-
-`server/db.js` and `server/app.js` load `.env` by default and `.env.production` when `NODE_ENV=production`.
-
-### Local (development)
-
-Another container `my-postgres` is available on the network.
-
-**Local credentials (`.env`):**
-| Parameter | Value |
-|-----------|-------|
-| Host | `my-postgres` |
-| Port | `5432` |
-| User | `postgres` |
-| Password | `root` |
-| Database | `taskadmin` |
-
-**Quick connect (shell):**
-```sh
-PGPASSWORD=root psql -h my-postgres -U postgres -d taskadmin
-```
-
-### Production (Render.com)
-
-**Config file:** `.env.production` (not committed to git, see `.gitignore`)
-
-| Parameter | Value |
-|-----------|-------|
-| Host | `dpg-daf9q5v40ujc73aaoh2g-a.frankfurt-postgres.render.com` |
-| Port | `5432` |
-| User | `taskadminuser` |
-| Database | `taskadmindb_rbw2` |
-| SSL | `{ rejectUnauthorized: false }` (required by Render) |
-
-**Quick connect (shell):**
-```sh
-PGPASSWORD=4XEmZ1MNnBu5EEs5Nb77j2LEJZmhLMsQ PGSSLMODE=require psql -h dpg-daf9q5v40ujc73aaoh2g-a.frankfurt-postgres.render.com -U taskadminuser -d taskadmindb_rbw2
-```
-
-### Env vars used by the app
-
-Same variable names in both env files (fallback defaults shown):
-```sh
-PGHOST=my-postgres
-PGPORT=5432
-PGUSER=postgres
-PGPASSWORD=root
-PGDATABASE=taskadmin
-```
-
-**Schema (auto-created on startup by `initDb`):**
-```sql
-CREATE TABLE IF NOT EXISTS tasks (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  title TEXT NOT NULL CHECK (char_length(title) BETWEEN 1 AND 255),
-  description TEXT NOT NULL DEFAULT '' CHECK (char_length(description) <= 2000),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  position INT NOT NULL DEFAULT 0
-);
-```
 
 ## Setup Commands
 
@@ -132,27 +62,15 @@ apk add --no-cache git curl openssh build-base nodejs npm python3 py3-pip
 
 ## Project Technology Stack
 
-- **Frontend:** HTML, CSS, JavaScript
-- **Backend:** Node.js + Express 5
-- **Database:** PostgreSQL — локально PostgreSQL 18 (container `my-postgres`), продакшен на Render.com (`taskadmindb_rbw2`)
+- **Frontend-only:** HTML, CSS, JavaScript (no backend servers)
 - **UI Framework:** Bootstrap 5 (via CDN)
   - CSS: `https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css`
   - JS Bundle: `https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js`
-- **API Endpoints:**
-  | Method | Path | Description |
-  |--------|------|-------------|
-  | `GET` | `/api/tasks` | list all tasks |
-  | `GET` | `/api/tasks/:id` | get one task |
-  | `POST` | `/api/tasks` | create task |
-  | `PUT` | `/api/tasks/:id` | update task |
-  | `DELETE` | `/api/tasks/:id` | delete task |
-  | `PUT` | `/api/tasks/reorder` | reorder tasks (DnD persistence) |
-- **Launch:**
-  - Local: `npm start` or `npm run dev` — Express serves API + static files on port 8080, DB = `my-postgres` (`.env`)
-  - Production: `npm run start:prod` (sets `NODE_ENV=production`) — DB = Render.com (`.env.production`, SSL)
+- **Data Storage:** localStorage (browser)
+- **Launch:** `darkhttpd . --port 8080` (serves files from current directory)
 - **Language:** Russian (interface text)
 - **Adaptive:** Bootstrap grid for responsive layout (desktop, tablet, mobile)
-- **Build:** No build tools required
+- **Build:** No build tools required; no npm/yarn needed for the app itself
 - **Figma Integration:** API for design system extraction (dotenv + axios)
   - Token: stored in `.env` as `FIGMA_TOKEN`
   - Files: `js/figma.js`, `js/figma-example.js`, `js/figma-inspect.js`
@@ -175,7 +93,7 @@ apk add --no-cache git curl openssh build-base nodejs npm python3 py3-pip
 - **Browser:** Chromium (system-installed at `/usr/bin/chromium-browser`)
 - **Config:** `playwright.config.js`
 - **Test directory:** `e2e/`
-- **Dev server:** `node server/app.js` (auto-started by Playwright on port 8080)
+- **Dev server:** `serve` (auto-started by Playwright on port 3000)
 
 ### Test Files
 | File | Coverage | Tests |
@@ -183,7 +101,7 @@ apk add --no-cache git curl openssh build-base nodejs npm python3 py3-pip
 | `e2e/tasks.spec.js` | CRUD: create, edit, delete, cancel | 13 |
 | `e2e/validation.spec.js` | Form validation: title, description | 9 |
 | `e2e/drag-and-drop.spec.js` | Drag & drop reordering + persistence | 3 |
-| `e2e/persistence.spec.js` | API persistence, empty state, counter | 9 |
+| `e2e/persistence.spec.js` | localStorage, empty state, counter | 9 |
 
 ### Commands
 ```sh
@@ -202,7 +120,6 @@ npm run test:ui          # Playwright UI mode
 - **Workflow:** `.github/workflows/deploy.yml`
 - **Triggers:** push to `main` and manual `workflow_dispatch`
 - **Runner:** `ubuntu-latest`
-- **Services:** PostgreSQL 16 (container with `taskadmin` database)
 - **Jobs:**
   - `test`: checkout → setup Node 20 → `npm ci` → install Playwright Chromium → run tests (`npm test`)
   - `deploy`: runs after `test` passes → deploy static site to GitHub Pages
@@ -210,11 +127,10 @@ npm run test:ui          # Playwright UI mode
 
 ### Test Pattern (beforeEach)
 ```js
-const { clearTasks, openApp } = require("./helpers");
-
-test.beforeEach(async ({ page, request }) => {
-  await clearTasks(request);  // truncates tasks via API
-  await openApp(page);        // goto("/") + wait for initial load
+test.beforeEach(async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
 });
 ```
 
