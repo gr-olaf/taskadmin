@@ -1,15 +1,21 @@
 const { test, expect } = require("@playwright/test");
+const { clearTasks, openApp, waitForListState } = require("./helpers");
 
-test.beforeEach(async ({ page }) => {
-  await page.goto("/");
-  await page.evaluate(() => localStorage.clear());
-  await page.reload();
+test.beforeEach(async ({ page, request }) => {
+  await clearTasks(request);
+  await openApp(page);
 
-  for (const name of ["Первая", "Вторая", "Третья"]) {
-    await page.click("#btnCreate");
-    await page.fill("#taskTitle", name);
-    await page.click('button[type="submit"]');
-  }
+  await page.click("#btnCreate");
+  await page.fill("#taskTitle", "Первая");
+  await page.click('button[type="submit"]');
+  await page.click("#btnCreate");
+  await page.fill("#taskTitle", "Вторая");
+  await page.click('button[type="submit"]');
+  await page.click("#btnCreate");
+  await page.fill("#taskTitle", "Третья");
+  await page.click('button[type="submit"]');
+
+  await expect(page.locator(".col-12")).toHaveCount(3);
 });
 
 test.describe("Drag & Drop перетаскивание", () => {
@@ -62,6 +68,8 @@ test.describe("Drag & Drop перетаскивание", () => {
 
   test("сохраняет порядок после перетаскивания при перезагрузке", async ({ page }) => {
     const cards = page.locator(".col-12");
+    await expect(cards).toHaveCount(3);
+
     const firstCard = cards.nth(0);
     const thirdCard = cards.nth(2);
 
@@ -76,6 +84,7 @@ test.describe("Drag & Drop перетаскивание", () => {
       { steps: 10 }
     );
     await page.mouse.up();
+    await waitForListState(page);
 
     await page.reload();
 

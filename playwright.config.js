@@ -13,13 +13,13 @@ module.exports = defineConfig({
   reporter: "list",
   timeout: 15000,
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: "http://localhost:8080",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
   },
   webServer: {
-    command: "npx serve . -l 3000 --no-clipboard",
-    port: 3000,
+    command: "node server/app.js",
+    port: 8080,
     reuseExistingServer: !process.env.CI,
   },
   projects: [
@@ -28,6 +28,7 @@ module.exports = defineConfig({
       use: {
         browserName: "chromium",
         headless: true,
+        chromiumSandbox: false,
         ...(useSystemChromium && {
           launchOptions: { executablePath: systemChromium },
         }),
